@@ -12,7 +12,7 @@
 <div class="card">
 <div class="grid">
 <div class="metric"><small>Faturação bruta esta semana</small><strong id="nrGross">—</strong><span class="sub" id="nrDays">A ler registos</span></div>
-<div class="metric"><small>Falta para a meta familiar</small><strong id="nrGap">—</strong><span class="sub">Comparação com as contas do Plano Certo</span></div>
+<div class="metric"><small>Disponível após custos TVDE</small><strong id="nrNet">—</strong><span class="sub">Estimativa da Nobre Ride</span></div><div class="metric"><small>Falta para a meta familiar</small><strong id="nrGap">—</strong><span class="sub">Comparado com o disponível, não com a faturação bruta</span></div><div class="metric"><small>Custos TVDE descontados</small><strong id="nrCosts">—</strong></div>
 <div class="metric"><small>Uber</small><strong id="nrUber">—</strong></div>
 <div class="metric"><small>Bolt</small><strong id="nrBolt">—</strong></div>
 <div class="metric"><small>POP</small><strong id="nrPop">—</strong></div>
@@ -45,12 +45,12 @@ function renderNobreRide(){
 let s=null;try{s=JSON.parse(localStorage.getItem('nobreRaidV2')||'null')}catch(e){}
 let target=weekly().total;
 if(!s||!s.days||typeof s.days!=='object'){
-$('nrGross').textContent='—';$('nrGap').textContent='—';$('nrUber').textContent='—';$('nrBolt').textContent='—';$('nrPop').textContent='—';$('nrTarget').textContent=money(target);$('nrDays').textContent='Sem registos encontrados';$('nrDaily').innerHTML='<div class="empty">Abre a Nobre Ride neste mesmo navegador e volta aqui. Ainda não encontrei os registos partilhados.</div>';$('nrStatus').textContent='A ligação está preparada, mas não foi encontrado o armazenamento da Nobre Ride.';return;
+$('nrGross').textContent='—';$('nrNet').textContent='—';$('nrGap').textContent='—';$('nrCosts').textContent='—';$('nrUber').textContent='—';$('nrBolt').textContent='—';$('nrPop').textContent='—';$('nrTarget').textContent=money(target);$('nrDays').textContent='Sem registos encontrados';$('nrDaily').innerHTML='<div class="empty">Abre a Nobre Ride neste mesmo navegador e volta aqui. Ainda não encontrei os registos partilhados.</div>';$('nrStatus').textContent='A ligação está preparada, mas não foi encontrado o armazenamento da Nobre Ride.';return;
 }
 let now=today(),d0=new Date(now+'T12:00:00');d0.setDate(d0.getDate()-(d0.getDay()+6)%7);let start=d0.getFullYear()+'-'+String(d0.getMonth()+1).padStart(2,'0')+'-'+String(d0.getDate()).padStart(2,'0');let end=new Date(d0);end.setDate(end.getDate()+6);let endIso=end.getFullYear()+'-'+String(end.getMonth()+1).padStart(2,'0')+'-'+String(end.getDate()).padStart(2,'0');
 let ds=Object.values(s.days).filter(x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date||'')&&x.date>=start&&x.date<=endIso).sort((a,b)=>a.date.localeCompare(b.date));
-let sum=k=>ds.reduce((v,x)=>v+(Number(x[k])||0),0),gross=sum('uber')+sum('bolt')+sum('pop'),gap=Math.max(0,target-gross);
-$('nrGross').textContent=money(gross);$('nrGap').textContent=money(gap);$('nrUber').textContent=money(sum('uber'));$('nrBolt').textContent=money(sum('bolt'));$('nrPop').textContent=money(sum('pop'));$('nrTarget').textContent=money(target);$('nrDays').textContent=ds.length+' dia(s) com registos · '+start+' a '+endIso;
+let sum=k=>ds.reduce((v,x)=>v+(Number(x[k])||0),0),gross=sum('uber')+sum('bolt')+sum('pop'),cfg=s.cfg||{},w=(s.weeks&&s.weeks[start])||{},fee=gross*(Number(cfg.fee)||0)/100,daily=sum('charge')+sum('other')+sum('maint'),fixed=(w.rent?(Number(cfg.rent)||0):0)+(w.via?(Number(cfg.via)||0):0),deposit=w.dep?(Number(cfg.dep)||0):0,costs=fee+daily+fixed+deposit,available=gross-costs,gap=Math.max(0,target-available);
+$('nrGross').textContent=money(gross);$('nrNet').textContent=money(available);$('nrGap').textContent=money(gap);$('nrCosts').textContent=money(costs);$('nrUber').textContent=money(sum('uber'));$('nrBolt').textContent=money(sum('bolt'));$('nrPop').textContent=money(sum('pop'));$('nrTarget').textContent=money(target);$('nrDays').textContent=ds.length+' dia(s) com registos · '+start+' a '+endIso;
 $('nrDaily').innerHTML=ds.length?ds.slice().reverse().map(x=>'<div class="item"><div><b>'+new Date(x.date+'T12:00:00').toLocaleDateString('pt-PT')+'</b><div class="sub">Uber '+money(x.uber)+' · Bolt '+money(x.bolt)+' · POP '+money(x.pop)+'</div></div><b>'+money((Number(x.uber)||0)+(Number(x.bolt)||0)+(Number(x.pop)||0))+'</b></div>').join(''):'<div class="empty">Ainda não há dias registados nesta semana na Nobre Ride.</div>';
 $('nrStatus').textContent='Ligação local ativa · apenas leitura · não altera nem apaga dados da Nobre Ride.';
 }

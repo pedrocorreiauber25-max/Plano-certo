@@ -8,18 +8,14 @@
 <section class="panel active" id="home"><div class="notice" id="daily"></div><div class="grid">
 <div class="card metric"><small>A pagar hoje</small><strong id="todayTotal">0,00 €</strong><span class="sub" id="todayCount"></span></div><div class="card metric"><small>Em atraso</small><strong id="lateTotal">0,00 €</strong><span class="sub" id="lateCount"></span></div><div class="card metric"><small>Dívida em aberto</small><strong id="debtTotal">0,00 €</strong><span class="sub">Saldo registado</span></div><div class="card metric"><small>Necessário por semana</small><strong id="weekTarget">200,00 €</strong><span class="sub">Inclui compras de casa</span></div></div>
 <div class="section">
-<div class="row"><h2>Faturação TVDE · Nobre Ride</h2><span class="tag">Leitura automática</span></div>
+<div class="row"><h2>Lucro estimado · Nobre Ride</h2><span class="tag">Ligação automática</span></div>
 <div class="card">
 <div class="grid">
-<div class="metric"><small>Faturação bruta esta semana</small><strong id="nrGross">—</strong><span class="sub" id="nrDays">A ler registos</span></div>
-<div class="metric"><small>Disponível após custos TVDE</small><strong id="nrNet">—</strong><span class="sub">Estimativa da Nobre Ride</span></div><div class="metric"><small>Falta para a meta familiar</small><strong id="nrGap">—</strong><span class="sub">Comparado com o disponível, não com a faturação bruta</span></div><div class="metric"><small>Custos TVDE descontados</small><strong id="nrCosts">—</strong></div>
-<div class="metric"><small>Uber</small><strong id="nrUber">—</strong></div>
-<div class="metric"><small>Bolt</small><strong id="nrBolt">—</strong></div>
-<div class="metric"><small>POP</small><strong id="nrPop">—</strong></div>
-<div class="metric"><small>Meta familiar semanal</small><strong id="nrTarget">—</strong></div>
+<div class="metric"><small>Lucro TVDE estimado esta semana</small><strong id="nrProfit">—</strong><span class="sub" id="nrDays">A consultar a Nobre Ride</span></div>
+<div class="metric"><small>Meta semanal familiar</small><strong id="nrTarget">—</strong></div>
+<div class="metric"><small>Falta para a meta familiar</small><strong id="nrGap">—</strong></div>
 </div>
-<div id="nrDaily" class="list section"><div class="empty">A consultar os registos da Nobre Ride…</div></div>
-<p class="sub">Valores de faturação bruta, apenas para comparação com a meta familiar. As despesas e os cálculos TVDE continuam na Nobre Ride. Leitura local, sem alterar os registos.</p>
+<p class="sub">O Plano Certo recebe apenas o lucro estimado calculado pela Nobre Ride. Não importa faturação diária nem volta a descontar despesas TVDE.</p>
 <div id="nrStatus" class="sub" aria-live="polite"></div>
 </div></div><div class="section"><div class="row"><h2>Para tratar hoje</h2><button class="primary" id="quickAdd">+ Nova conta</button></div><div class="list" id="todayList"></div></div><div class="section"><div class="row"><h2>Próximos 7 dias</h2></div><div class="list" id="soonList"></div></div></section>
 <section class="panel" id="accounts"><div class="row"><div><h2>Contas e dívidas</h2><div class="sub">Despesas da família. Sem despesas TVDE.</div></div><button class="primary" id="add">+ Nova conta</button></div><div class="list" id="accountList"></div></section>
@@ -44,16 +40,26 @@ function row(a){let n=diff(a.due,today()),cls=n<0?'late':n===0?'today':'';return
 function renderNobreRide(){
 let s=null;try{s=JSON.parse(localStorage.getItem('nobreRaidV2')||'null')}catch(e){}
 let target=weekly().total;
-if(!s||!s.days||typeof s.days!=='object'){
-$('nrGross').textContent='—';$('nrNet').textContent='—';$('nrGap').textContent='—';$('nrCosts').textContent='—';$('nrUber').textContent='—';$('nrBolt').textContent='—';$('nrPop').textContent='—';$('nrTarget').textContent=money(target);$('nrDays').textContent='Sem registos encontrados';$('nrDaily').innerHTML='<div class="empty">Abre a Nobre Ride neste mesmo navegador e volta aqui. Ainda não encontrei os registos partilhados.</div>';$('nrStatus').textContent='A ligação está preparada, mas não foi encontrado o armazenamento da Nobre Ride.';return;
+if(!s||!s.days||typeof s.days!=='object'||!s.cfg){
+$('nrProfit').textContent='—';$('nrTarget').textContent=money(target);$('nrGap').textContent='—';$('nrDays').textContent='Sem dados disponíveis';$('nrStatus').textContent='Abre a Nobre Ride neste mesmo navegador e confirma que tens os registos guardados.';return;
 }
-let now=today(),d0=new Date(now+'T12:00:00');d0.setDate(d0.getDate()-(d0.getDay()+6)%7);let start=d0.getFullYear()+'-'+String(d0.getMonth()+1).padStart(2,'0')+'-'+String(d0.getDate()).padStart(2,'0');let end=new Date(d0);end.setDate(end.getDate()+6);let endIso=end.getFullYear()+'-'+String(end.getMonth()+1).padStart(2,'0')+'-'+String(end.getDate()).padStart(2,'0');
-let ds=Object.values(s.days).filter(x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date||'')&&x.date>=start&&x.date<=endIso).sort((a,b)=>a.date.localeCompare(b.date));
-let sum=k=>ds.reduce((v,x)=>v+(Number(x[k])||0),0),gross=sum('uber')+sum('bolt')+sum('pop'),cfg=s.cfg||{},w=(s.weeks&&s.weeks[start])||{},fee=gross*(Number(cfg.fee)||0)/100,daily=sum('charge')+sum('other')+sum('maint'),fixed=(w.rent?(Number(cfg.rent)||0):0)+(w.via?(Number(cfg.via)||0):0),deposit=w.dep?(Number(cfg.dep)||0):0,costs=fee+daily+fixed+deposit,available=gross-costs,gap=Math.max(0,target-available);
-$('nrGross').textContent=money(gross);$('nrNet').textContent=money(available);$('nrGap').textContent=money(gap);$('nrCosts').textContent=money(costs);$('nrUber').textContent=money(sum('uber'));$('nrBolt').textContent=money(sum('bolt'));$('nrPop').textContent=money(sum('pop'));$('nrTarget').textContent=money(target);$('nrDays').textContent=ds.length+' dia(s) com registos · '+start+' a '+endIso;
-$('nrDaily').innerHTML=ds.length?ds.slice().reverse().map(x=>'<div class="item"><div><b>'+new Date(x.date+'T12:00:00').toLocaleDateString('pt-PT')+'</b><div class="sub">Uber '+money(x.uber)+' · Bolt '+money(x.bolt)+' · POP '+money(x.pop)+'</div></div><b>'+money((Number(x.uber)||0)+(Number(x.bolt)||0)+(Number(x.pop)||0))+'</b></div>').join(''):'<div class="empty">Ainda não há dias registados nesta semana na Nobre Ride.</div>';
-$('nrStatus').textContent='Ligação local ativa · apenas leitura · não altera nem apaga dados da Nobre Ride.';
+let now=today(),d0=new Date(now+'T12:00:00');d0.setDate(d0.getDate()-(d0.getDay()+6)%7);
+let start=d0.getFullYear()+'-'+String(d0.getMonth()+1).padStart(2,'0')+'-'+String(d0.getDate()).padStart(2,'0');
+let end=new Date(d0);end.setDate(end.getDate()+6);
+let endIso=end.getFullYear()+'-'+String(end.getMonth()+1).padStart(2,'0')+'-'+String(end.getDate()).padStart(2,'0');
+let ds=Object.values(s.days).filter(x=>x&&x.date>=start&&x.date<=endIso);
+let gross=ds.reduce((a,x)=>a+(Number(x.uber)||0)+(Number(x.bolt)||0)+(Number(x.pop)||0),0);
+let daily=ds.reduce((a,x)=>a+(Number(x.charge)||0)+(Number(x.other)||0)+(Number(x.maint)||0),0);
+let fee=gross*(Number(s.cfg.fee)||0)/100;
+let w=(s.weeks&&s.weeks[start])||{rent:false,via:false};
+let fixed=(w.rent?(Number(s.cfg.rent)||0):0)+(w.via?(Number(s.cfg.via)||0):0);
+let profit=gross-fee-daily-fixed,gap=Math.max(0,target-profit);
+$('nrProfit').textContent=money(profit);$('nrProfit').style.color=profit>=0?'#2563eb':'#dc2626';
+$('nrTarget').textContent=money(target);$('nrGap').textContent=money(gap);
+$('nrDays').textContent=ds.length+' dia(s) registados · semana '+start+' a '+endIso;
+$('nrStatus').textContent='Leitura do lucro estimado semanal da Nobre Ride · só consulta · sem alterar dados TVDE.';
 }
+
 function render(){let t=data.accounts.filter(a=>a.due===today()),l=data.accounts.filter(a=>a.due<today()),soon=data.accounts.filter(a=>a.due>today()&&diff(a.due,today())<=7).sort((a,b)=>a.due.localeCompare(b.due)),debt=data.accounts.filter(a=>a.kind==='debt').reduce((s,a)=>s+(+a.balance||0),0),w=weekly();$('todayTotal').textContent=money(t.reduce((s,a)=>s+(+a.amount||0),0));$('todayCount').textContent=t.length+' pagamento(s)';$('lateTotal').textContent=money(l.reduce((s,a)=>s+(+a.amount||0),0));$('lateCount').textContent=l.length+' conta(s)';$('debtTotal').textContent=money(debt);$('weekTarget').textContent=money(w.total);$('daily').textContent=l.length?'Tens '+l.length+' conta(s) em atraso. Começa por regularizar estas situações.':t.length?'Hoje tens '+t.length+' pagamento(s) para tratar.':'Hoje não tens pagamentos vencidos. Consulta os próximos dias para te preparares.';$('daily').className='notice '+(l.length?'warn':'');$('todayList').innerHTML=t.length?t.map(row).join(''):'<div class="empty">Não tens pagamentos registados para hoje. ✨</div>';$('soonList').innerHTML=soon.length?soon.map(row).join(''):'<div class="empty">Sem pagamentos nos próximos 7 dias.</div>';$('accountList').innerHTML=data.accounts.length?data.accounts.slice().sort((a,b)=>a.due.localeCompare(b.due)).map(row).join(''):'<div class="empty">Ainda não adicionaste contas. Regista a água, luz, renda ou uma dívida.</div>';$('regular').textContent=money(w.regular+w.once);$('debtPart').textContent=money(w.debt);$('groceryPart').textContent=money(data.groceries);$('weekly').textContent=money(w.total);$('explain').textContent='Despesas regulares: '+money(w.regular)+' · Pontuais distribuídas até ao vencimento: '+money(w.once)+' · Compras: '+money(data.groceries);$('groceries').value=data.groceries;calendar();renderNobreRide()}
 function openForm(a){$('form').reset();$('id').value=a?.id||'';$('formTitle').textContent=a?'Editar conta':'Nova conta';['name','kind','owner','category','amount','frequency','due','balance','minimum','notes'].forEach(k=>{if(a&&a[k]!==undefined)$(k).value=a[k]});if(!a){$('due').value=today();$('owner').value='Ambos';$('balance').value=0;$('minimum').value=0}debtFields();$('modal').classList.add('open')}
 function debtFields(){document.querySelectorAll('.debtfield').forEach(x=>x.style.display=$('kind').value==='debt'?'flex':'none')}

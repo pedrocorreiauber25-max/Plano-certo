@@ -12,8 +12,8 @@
 <div class="card">
 <div class="grid">
 <div class="metric"><small>Lucro TVDE estimado esta semana</small><strong id="nrProfit">—</strong><span class="sub" id="nrDays">A consultar a Nobre Ride</span></div>
-<div class="metric"><small>Meta semanal familiar</small><strong id="nrTarget">—</strong></div>
-<div class="metric"><small>Falta para a meta familiar</small><strong id="nrGap">—</strong></div>
+<div class="metric"><small>Meta semanal familiar (objetivo prudente)</small><strong id="nrTarget">—</strong></div>
+<div class="metric"><small>Falta para a meta prudente</small><strong id="nrGap">—</strong></div>
 </div>
 <p class="sub">O Plano Certo recebe apenas o lucro estimado calculado pela Nobre Ride. Não importa faturação diária nem volta a descontar despesas TVDE.</p>
 <div id="nrStatus" class="sub" aria-live="polite"></div>
@@ -41,7 +41,7 @@ function status(a){let n=diff(a.due,today());return n<0?'Em atraso':n===0?'Hoje'
 function row(a){let n=diff(a.due,today()),cls=n<0?'late':n===0?'today':'';return '<div class="item"><div><b>'+esc(a.name)+'</b> <span class="tag '+cls+'">'+status(a)+'</span><div class="sub">'+esc(a.owner)+' · '+esc(a.category)+' · '+new Date(a.due+'T12:00:00').toLocaleDateString('pt-PT')+(a.kind==='debt'?' · Saldo '+money(a.balance):'')+'</div></div><div style="text-align:right"><b>'+money(a.amount)+'</b><div class="actions" style="margin-top:6px"><button class="secondary" onclick="paid(\''+a.id+'\')">Pago</button><button class="secondary" onclick="edit(\''+a.id+'\')">Editar</button><button class="danger" onclick="removeA(\''+a.id+'\')">×</button></div></div></div>'}
 function renderNobreRide(){
 let s=null;try{s=JSON.parse(localStorage.getItem('nobreRaidV2')||'null')}catch(e){}
-let target=weekly().total;
+let target=300; // meta semanal familiar prudente, separada do custo total teórico do plano
 if(!s||!s.days||typeof s.days!=='object'||!s.cfg){
 $('nrProfit').textContent='—';$('nrTarget').textContent=money(target);$('nrGap').textContent='—';$('nrDays').textContent='Sem dados disponíveis';$('nrStatus').textContent='Abre a Nobre Ride neste mesmo navegador e confirma que tens os registos guardados.';return;
 }

@@ -1,4 +1,4 @@
-const CACHE="plano-certo-v10";
+const CACHE="plano-certo-v11";
 const FILES=["./","./index.html","./manifest.json","./icon.svg"];
 self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(a=>Promise.all(a.filter(x=>x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));

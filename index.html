@@ -150,7 +150,7 @@ function renderCEO(){
 const now=today(),monthKey=now.slice(0,7),[y,m]=monthKey.split("-").map(Number),lastDay=new Date(y,m,0).getDate(),monthEnd=monthKey+"-"+String(lastDay).padStart(2,"0");
 const sum=a=>a.reduce((v,x)=>v+(Number(x.amount)||0),0);
 const received=data.incomes.filter(x=>x.status==="received"),incomeMonth=sum(received.filter(x=>(x.date||"").slice(0,7)===monthKey));
-const paidThisMonth=sum(data.history.filter(x=>(x.date||"").slice(0,7)===monthKey))+sum(data.foodExpenses.filter(x=>(x.date||"").slice(0,7)===monthKey))+sum(data.expenses.filter(x=>(x.date||"").slice(0,7)===monthKey));
+const trackingStart="2026-11-09";const paidThisMonth=sum(data.history.filter(x=>x.date>=trackingStart&&(x.date||"").slice(0,7)===monthKey))+sum(data.foodExpenses.filter(x=>x.date>=trackingStart&&(x.date||"").slice(0,7)===monthKey))+sum(data.expenses.filter(x=>x.date>=trackingStart&&(x.date||"").slice(0,7)===monthKey));
 const late=data.accounts.filter(a=>a.due<now).reduce((v,a)=>v+(Number(a.amount)||0),0);
 $("ceoIncome").textContent=money(incomeMonth);$("ceoSpent").textContent=money(paidThisMonth);
 const balance=received.reduce((v,x)=>v+(Number(x.amount)||0),0)-sum(data.history)-sum(data.foodExpenses)-sum(data.expenses);

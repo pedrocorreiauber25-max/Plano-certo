@@ -35,6 +35,17 @@
 <div class="field"><label>Pagamento extra de dívida (€)</label><input id="simDebt" type="number" min="0" step=".01" value="0"></div>
 <div class="field"><label>Poupança mensal em despesas (€)</label><input id="simSaving" type="number" min="0" step=".01" value="0"></div></div>
 <div class="notice" style="margin-top:12px"><div class="sub">Saldo previsto simulado no fim do mês</div><strong id="simResult" style="font-size:25px">—</strong><div class="sub" id="simExplain">Altera os valores para experimentar cenários.</div></div></div>
+
+<div class="card section"><div class="row"><div><h2>Relatório mensal</h2><div class="sub">Compara entradas e despesas registadas, mês a mês</div></div><input id="monthlyReportMonth" type="month" style="max-width:170px"></div>
+<div class="grid section">
+<div class="metric"><small>Entradas recebidas</small><strong id="reportIncome">0,00 €</strong></div>
+<div class="metric"><small>Total de despesas</small><strong id="reportOut">0,00 €</strong></div>
+<div class="metric"><small>Saldo do mês</small><strong id="reportBalance">0,00 €</strong></div>
+<div class="metric"><small>N.º de registos</small><strong id="reportCount">0</strong></div>
+</div>
+<div class="section"><h2>Despesas por tipo</h2><div id="reportBreakdown" class="list" style="margin-top:10px"></div></div>
+<div class="section"><h2>Comparação com o mês anterior</h2><div id="reportComparison" class="list" style="margin-top:10px"></div></div>
+<p class="sub">Relatório calculado apenas com os registos guardados. Contas pagas, alimentação e despesas do dia a dia são somadas uma única vez em cada categoria.</p></div>
 </section>
 <section class="panel" id="accounts"><div class="row"><div><h2>Contas e dívidas</h2><div class="sub">Despesas da família. Sem despesas TVDE.</div></div><button class="primary" id="add">+ Nova conta</button></div><div class="list" id="accountList"></div></section>
 <section class="panel" id="incomes"><div class="row"><div><h2>Entradas de dinheiro</h2><div class="sub">Regista abonos, rendimentos, subsídios e outros valores recebidos ou previstos.</div></div><button class="primary" id="addIncome">+ Nova entrada</button></div><div class="notice">Uma entrada prevista não aumenta o saldo disponível. Só passa a contar quando a marcares como recebida. Para rendimentos mensais, regista cada recebimento quando entrar na conta.</div><div class="list" id="incomeList"></div></section>
@@ -155,7 +166,7 @@ $("expenseCompare").innerHTML=names.length?names.map(name=>{let a=sum(current.fi
 $("expenseList").innerHTML=data.expenses.filter(x=>(x.date||"").slice(0,7)===month).sort((a,b)=>(b.date||"").localeCompare(a.date||"")).map(x=>'<div class="item"><div><b>'+esc(x.name)+'</b><div class="sub">'+esc(x.category)+' · '+new Date(x.date+"T12:00:00").toLocaleDateString("pt-PT")+(x.note?" · "+esc(x.note):"")+'</div></div><div style="text-align:right"><b>'+money(x.amount)+'</b><div class="actions"><button class="danger" onclick="removeExpense(\''+x.id+'\')">Eliminar</button></div></div></div>').join("")||'<div class="empty">Sem despesas neste mês.</div>';
 }
 $("expenseDate").value=today();$("expenseMonth").value=today().slice(0,7);
-$("expenseMonth").onchange=renderExpenses;$("simDebt").oninput=updateCEOSimulator;$("simSaving").oninput=updateCEOSimulator;
+$("expenseMonth").onchange=renderExpenses;$("monthlyReportMonth").value=today().slice(0,7);$("monthlyReportMonth").onchange=renderMonthlyReport;$("simDebt").oninput=updateCEOSimulator;$("simSaving").oninput=updateCEOSimulator;
 $("budgetForm").onsubmit=e=>{e.preventDefault();const category=$("budgetCategory").value,amount=Number($("budgetAmount").value);if(amount<=0)return;data.categoryBudgets=data.categoryBudgets||{};data.categoryBudgets[category]=amount;$("budgetAmount").value="";persist()};
 window.removeBudget=name=>{if(confirm("Remover o limite de "+name+"?")){delete data.categoryBudgets[name];persist()}};
 
@@ -169,6 +180,23 @@ const expected=sum(data.incomes.filter(x=>x.status!=="received"&&x.date>now&&x.d
 const extra=Math.max(0,Number($("simDebt").value)||0),saving=Math.max(0,Number($("simSaving").value)||0),result=base-extra+saving;
 $("simResult").textContent=money(result);$("simResult").style.color=result<0?"var(--red)":"var(--green)";
 $("simExplain").textContent="Cenário: "+money(extra)+" de pagamento extra de dívida e "+money(saving)+" de redução de despesas. Diferença face à previsão atual: "+(saving-extra>=0?"+":"")+money(saving-extra)+". Nada foi guardado nem pago.";
+}
+
+function renderMonthlyReport(){
+const input=$("monthlyReportMonth");if(!input)return;
+const key=input.value||today().slice(0,7),[yy,mm]=key.split("-").map(Number),pd=new Date(yy,mm-2,1),prev=pd.getFullYear()+"-"+String(pd.getMonth()+1).padStart(2,"0");
+const sum=a=>a.reduce((v,x)=>v+(Number(x.amount)||0),0),incomes=(data.incomes||[]).filter(x=>x.status==="received"),inc=sum(incomes.filter(x=>(x.date||"").slice(0,7)===key)),prevInc=sum(incomes.filter(x=>(x.date||"").slice(0,7)===prev));
+const hist=(data.history||[]).filter(x=>(x.date||"").slice(0,7)===key),food=(data.foodExpenses||[]).filter(x=>(x.date||"").slice(0,7)===key),other=(data.expenses||[]).filter(x=>(x.date||"").slice(0,7)===key);
+const prevOut=sum((data.history||[]).filter(x=>(x.date||"").slice(0,7)===prev))+sum((data.foodExpenses||[]).filter(x=>(x.date||"").slice(0,7)===prev))+sum((data.expenses||[]).filter(x=>(x.date||"").slice(0,7)===prev));
+const out=sum(hist)+sum(food)+sum(other),balance=inc-out;
+$("reportIncome").textContent=money(inc);$("reportOut").textContent=money(out);$("reportBalance").textContent=money(balance);$("reportBalance").style.color=balance<0?"var(--red)":"var(--green)";
+$("reportCount").textContent=incomes.filter(x=>(x.date||"").slice(0,7)===key).length+hist.length+food.length+other.length;
+const cats={};hist.forEach(x=>cats["Contas pagas"]=(cats["Contas pagas"]||0)+(Number(x.amount)||0));food.forEach(x=>cats["Alimentação"]=(cats["Alimentação"]||0)+(Number(x.amount)||0));other.forEach(x=>cats[x.category||"Outros"]=(cats[x.category||"Outros"]||0)+(Number(x.amount)||0));
+const rows=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+$("reportBreakdown").innerHTML=rows.length?rows.map(([n,v])=>'<div class="item"><b>'+esc(n)+'</b><b>'+money(v)+'</b></div>').join(""):'<div class="empty">Sem despesas registadas neste mês.</div>';
+const deltaOut=out-prevOut,deltaInc=inc-prevInc,prevBalance=prevInc-prevOut,deltaBalance=balance-prevBalance;
+const line=(label,delta,goodWhenDown)=>'<div class="item"><div><b>'+label+'</b><div class="sub">Mês anterior: '+money(label==="Entradas"?prevInc:label==="Despesas"?prevOut:prevBalance)+' · Mês selecionado: '+money(label==="Entradas"?inc:label==="Despesas"?out:balance)+'</div></div><b style="color:'+(delta===0?"var(--ink)":((goodWhenDown?delta<0:delta>0)?"var(--green)":"var(--red)"))+'">'+(delta>0?"+":"")+money(delta)+'</b></div>';
+$("reportComparison").innerHTML=line("Entradas",deltaInc,false)+line("Despesas",deltaOut,true)+line("Saldo",deltaBalance,false);
 }
 function renderCEO(){
 const now=today(),monthKey=now.slice(0,7),[y,m]=monthKey.split("-").map(Number),lastDay=new Date(y,m,0).getDate(),monthEnd=monthKey+"-"+String(lastDay).padStart(2,"0");
@@ -184,7 +212,7 @@ const expected=sum(data.incomes.filter(x=>x.status!=="received"&&x.date>now&&x.d
 const upcoming=sum(data.accounts.filter(a=>a.due>=now&&a.due<=monthEnd).map(a=>({amount:a.amount})));
 const forecast=balance+expected-upcoming;
 $("ceoForecast").textContent=money(forecast);$("ceoForecast").style.color=forecast<0?"var(--red)":"var(--green)";
-$("ceoForecastNote").textContent="Inclui "+money(expected)+" de entradas previstas e "+money(upcoming)+" de contas ainda agendadas até "+new Date(monthEnd+"T12:00:00").toLocaleDateString("pt-PT")+". Não inclui despesas variáveis futuras.";updateCEOSimulator();
+$("ceoForecastNote").textContent="Inclui "+money(expected)+" de entradas previstas e "+money(upcoming)+" de contas ainda agendadas até "+new Date(monthEnd+"T12:00:00").toLocaleDateString("pt-PT")+". Não inclui despesas variáveis futuras.";updateCEOSimulator();renderMonthlyReport();
 const months=[];for(let k=5;k>=0;k--){let d=new Date(y,m-1-k,1),key=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");months.push({key,label:d.toLocaleDateString("pt-PT",{month:"short"}),income:sum(received.filter(x=>(x.date||"").slice(0,7)===key)),out:sum(data.history.filter(x=>(x.date||"").slice(0,7)===key))+sum(data.foodExpenses.filter(x=>(x.date||"").slice(0,7)===key))+sum(data.expenses.filter(x=>(x.date||"").slice(0,7)===key))})}
 const max=Math.max(1,...months.flatMap(x=>[x.income,x.out]));
 $("ceoChart").innerHTML=months.map(x=>'<div class="ceo-month"><div class="ceo-bars"><div class="ceo-bar in" title="Entradas: '+money(x.income)+'" style="height:'+Math.max(x.income?3:0,x.income/max*100)+'%"></div><div class="ceo-bar out" title="Despesas: '+money(x.out)+'" style="height:'+Math.max(x.out?3:0,x.out/max*100)+'%"></div></div><small>'+esc(x.label)+'</small><small>'+money(x.income-x.out)+'</small></div>').join("");

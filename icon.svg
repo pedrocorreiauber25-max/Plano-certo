@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#eaf1ff"/><rect x="95" y="95" width="322" height="322" rx="75" fill="#fff"/><path d="M155 260l75 75 135-150" fill="none" stroke="#4778d8" stroke-width="35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#06183e"/><stop offset=".55" stop-color="#123e91"/><stop offset="1" stop-color="#06183e"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff1a8"/><stop offset=".45" stop-color="#f7c84b"/><stop offset="1" stop-color="#c98716"/></linearGradient>
+</defs>
+<rect width="512" height="512" rx="112" fill="url(#bg)"/>
+<rect x="13" y="13" width="486" height="486" rx="100" fill="none" stroke="url(#gold)" stroke-width="9"/>
+<path d="M92 221 256 91l164 130" fill="none" stroke="url(#gold)" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M132 207v-20l124-98 124 98v122H132z" fill="#102d67" stroke="#f7d46d" stroke-width="8" stroke-linejoin="round"/>
+<rect x="211" y="225" width="90" height="84" rx="12" fill="#f5f8ff"/>
+<path d="m229 267 18 18 37-43" fill="none" stroke="#d49a22" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M333 283v-44h27v44M371 283v-78h27v78" fill="none" stroke="url(#gold)" stroke-width="18" stroke-linecap="round"/>
+<path d="M318 183c31-28 57-35 89-34l-22-22m22 22-24 21" fill="none" stroke="#fff0a6" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="125" cy="316" r="37" fill="url(#gold)"/><text x="125" y="330" text-anchor="middle" font-family="Arial,sans-serif" font-size="43" font-weight="700" fill="#09204d">€</text>
+<text x="256" y="390" text-anchor="middle" font-family="Arial,sans-serif" font-size="66" font-weight="900" letter-spacing="2" fill="#fff">PLANO</text>
+<text x="256" y="454" text-anchor="middle" font-family="Arial,sans-serif" font-size="68" font-weight="900" letter-spacing="2" fill="url(#gold)">CERTO</text>
+</svg>

@@ -18,16 +18,10 @@
       "purpose": "any"
     },
     {
-      "src": "/Plano-certo/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/Plano-certo/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
-    },
-    {
-      "src": "/Plano-certo/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ]
 }

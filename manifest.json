@@ -7,27 +7,16 @@
   "start_url": "/Plano-certo/?source=pwa",
   "scope": "/Plano-certo/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#f7f9fd",
   "theme_color": "#123e91",
   "icons": [
     {
-      "src": "/Plano-certo/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/Plano-certo/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
       "src": "/Plano-certo/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
